@@ -107,6 +107,36 @@ export default function WheelViewer() {
     }
   }, [isDragging]);
 
+  // Mouse wheel handler
+  const handleWheel = (e) => {
+    // Prevent default scroll behavior
+    // Note: React's synthetic event might not support preventDefault for wheel in passive mode
+    // We'll handle visual rotation here
+    
+    const delta = e.deltaY;
+    const rotationAmount = delta > 0 ? 5 : -5;
+    
+    setBottomRotation((prev) => prev + rotationAmount);
+  };
+
+  // Add non-passive wheel listener for prevention
+  useEffect(() => {
+    const wheelElement = wheelRef.current;
+    if (wheelElement) {
+      const preventScroll = (e) => {
+        e.preventDefault();
+        const delta = e.deltaY;
+        const rotationAmount = delta > 0 ? 5 : -5;
+        setBottomRotation((prev) => prev + rotationAmount);
+      };
+      
+      wheelElement.addEventListener('wheel', preventScroll, { passive: false });
+      return () => {
+        wheelElement.removeEventListener('wheel', preventScroll);
+      };
+    }
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
       {/* Mobile Sliders - Show at top on mobile */}
@@ -130,20 +160,25 @@ export default function WheelViewer() {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-col lg:flex-row items-center justify-center gap-8 flex-1">
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-8 flex-1 mt-8 lg:mt-0">
       {/* Wheel Container */}
       <div className="flex items-center justify-center">
-        <div
-          ref={wheelRef}
-          className={`relative w-[300px] h-[300px] md:w-[800px] md:h-[800px] transition-transform duration-500 ease-out ${
-            isDragging ? 'cursor-grabbing' : 'cursor-grab'
-          }`}
-          style={{
-            transformStyle: 'preserve-3d',
-            transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
-          }}
-          onMouseDown={handleMouseDown}
-        >
+        {/* Wrapper for overflow clipping */}
+        <div className="relative w-[300px] h-[300px] md:w-[800px] md:h-[800px] overflow-hidden rounded-full">
+          <div
+            ref={wheelRef}
+            className={`w-full h-full relative transition-transform duration-500 ease-out ${
+              isDragging ? 'cursor-grabbing' : 'cursor-grab'
+            }`}
+             style={{
+              transformStyle: 'preserve-3d',
+              transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+            }}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
           {/* Front View - Layered Wheel */}
           <div
             className="absolute inset-0"
@@ -208,31 +243,36 @@ export default function WheelViewer() {
             />
           </div>
         </div>
+        </div>
       </div>
 
       {/* Controls */}
       <div className="w-full max-w-sm space-y-4">
         {/* Header */}
-        <div className="text-center lg:text-left mb-4">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white mb-2">
+        <div className="text-center lg:text-left mb-6">
+          <h1 className="text-xl md:text-3xl font-bold text-gray-800 dark:text-white mb-3">
             WHO Medical Eligibility Criteria Wheel
           </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            Drag to rotate • Use arrow keys (← →) • Press F to flip
-          </p>
+          
+          {/* Minimal Controls Guide */}
+          <div className="flex flex-wrap gap-3 text-xs text-gray-600 dark:text-gray-400">
+            <span className="flex items-center gap-1 bg-white dark:bg-gray-800 px-2 py-1 rounded shadow-sm">
+              <span>🖱️</span> Drag the wheel or use mouse scrollwheel to rotate
+            </span>
+            <span className="flex items-center gap-1 bg-white dark:bg-gray-800 px-2 py-1 rounded shadow-sm">
+              <span>⌨️</span> ← → to rotate
+            </span>
+            <span className="flex items-center gap-1 bg-white dark:bg-gray-800 px-2 py-1 rounded shadow-sm">
+              <span>Press</span> F to flip
+            </span>
+          </div>
         </div>
 
         {/* Rotation Display */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-          <div className="grid grid-cols-2 gap-4 text-center">
+          <div className="grid grid-cols-1 gap-4 text-center">
             <div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Top Layer</p>
-              <p className="text-xl font-bold text-indigo-600 dark:text-indigo-400">
-                {Math.round(rotation)}°
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Bottom Layer</p>
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Rotation</p>
               <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
                 {Math.round(bottomRotation)}°
               </p>
@@ -245,7 +285,7 @@ export default function WheelViewer() {
         {/* Bottom Layer Rotation Slider */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Bottom Layer Rotation
+            Rotate wheel
           </label>
           <input
             type="range"
@@ -278,15 +318,26 @@ export default function WheelViewer() {
           }}
           className="w-full bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-2 px-6 rounded-lg shadow transition-all duration-200"
         >
-          Reset Both Layers
+          Reset wheel
         </button>
 
-        {/* Instructions for Desktop */}
-        <div className="hidden md:block text-center lg:text-left text-xs text-gray-500 dark:text-gray-400 pt-2">
-          <p className="font-medium mb-1">Keyboard Shortcuts:</p>
-          <p>← → Arrow keys • F to flip</p>
+
+        {/* Source & Download */}
+        <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+          <p className="text-xs text-center text-gray-500 dark:text-gray-400 mb-3">
+            Source: <a href="https://www.who.int/publications/i/item/9789241549257" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">WHO Medical Eligibility Criteria Wheel</a>
+          </p>
+          <a
+            href="/WHO-MEC wheel.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+          >
+            <span>⬇️</span> Download PDF
+          </a>
         </div>
         </div>
+
       </div>
     </div>
   );
