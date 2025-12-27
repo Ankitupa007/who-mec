@@ -37,7 +37,7 @@ export default function WheelViewer() {
     const currentAngle = calculateAngle(clientX, clientY);
     const angleDiff = currentAngle - lastAngleRef.current;
     
-    setRotation((prev) => prev + angleDiff);
+    setBottomRotation((prev) => prev + angleDiff);
     
     lastAngleRef.current = currentAngle;
   };
@@ -81,10 +81,10 @@ export default function WheelViewer() {
     const handleKeyDown = (e) => {
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        setRotation((prev) => prev - 5);
+        setBottomRotation((prev) => prev - 5);
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
-        setRotation((prev) => prev + 5);
+        setBottomRotation((prev) => prev + 5);
       } else if (e.key === 'f' || e.key === 'F') {
         e.preventDefault();
         setIsFlipped((prev) => !prev);
@@ -108,12 +108,34 @@ export default function WheelViewer() {
   }, [isDragging]);
 
   return (
-    <div className="flex flex-col lg:flex-row items-center justify-center gap-8 min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
+      {/* Mobile Sliders - Show at top on mobile */}
+      <div className="lg:hidden w-full max-w-md mx-auto mb-6 space-y-3">
+
+
+        {/* Bottom Layer Rotation Slider */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3">
+          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Bottom Layer: {Math.round(bottomRotation)}°
+          </label>
+          <input
+            type="range"
+            min="-360"
+            max="360"
+            value={bottomRotation}
+            onChange={(e) => setBottomRotation(Number(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-emerald-600"
+          />
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex flex-col lg:flex-row items-center justify-center gap-8 flex-1">
       {/* Wheel Container */}
       <div className="flex items-center justify-center">
         <div
           ref={wheelRef}
-          className={`relative w-[350px] h-[350px] md:w-[700px] md:h-[700px] transition-transform duration-500 ease-out ${
+          className={`relative w-[300px] h-[300px] md:w-[800px] md:h-[800px] transition-transform duration-500 ease-out ${
             isDragging ? 'cursor-grabbing' : 'cursor-grab'
           }`}
           style={{
@@ -121,9 +143,6 @@ export default function WheelViewer() {
             transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
           }}
           onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         >
           {/* Front View - Layered Wheel */}
           <div
@@ -145,7 +164,7 @@ export default function WheelViewer() {
                 alt="WHO Wheel Bottom Layer"
                 width={700}
                 height={700}
-                className="w-full h-full object-contain select-none pointer-events-none"
+                className="w-full h-full object-contain select-none pointer-events-none rounded-full"
                 priority
                 draggable={false}
               />
@@ -163,7 +182,7 @@ export default function WheelViewer() {
                 alt="WHO Wheel Top Layer"
                 width={700}
                 height={700}
-                className="w-full h-full object-contain select-none pointer-events-none"
+                className="w-full h-full object-contain select-none pointer-events-none rounded-full"
                 priority
                 draggable={false}
               />
@@ -184,7 +203,7 @@ export default function WheelViewer() {
               alt="WHO Wheel Back"
               width={700}
               height={700}
-              className="w-full h-full object-contain select-none pointer-events-none"
+              className="w-full h-full object-contain select-none pointer-events-none rounded-full"
               draggable={false}
             />
           </div>
@@ -221,25 +240,7 @@ export default function WheelViewer() {
           </div>
         </div>
 
-        {/* Top Layer Rotation Slider */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Top Layer Rotation
-          </label>
-          <input
-            type="range"
-            min="-360"
-            max="360"
-            value={rotation}
-            onChange={(e) => setRotation(Number(e.target.value))}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-indigo-600"
-          />
-          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-            <span>-360°</span>
-            <span>0°</span>
-            <span>360°</span>
-          </div>
-        </div>
+
 
         {/* Bottom Layer Rotation Slider */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4">
@@ -284,6 +285,7 @@ export default function WheelViewer() {
         <div className="hidden md:block text-center lg:text-left text-xs text-gray-500 dark:text-gray-400 pt-2">
           <p className="font-medium mb-1">Keyboard Shortcuts:</p>
           <p>← → Arrow keys • F to flip</p>
+        </div>
         </div>
       </div>
     </div>
