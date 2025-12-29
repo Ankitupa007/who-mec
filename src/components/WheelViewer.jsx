@@ -146,7 +146,7 @@ export default function WheelViewer() {
         {/* Bottom Layer Rotation Slider */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3">
           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Bottom Layer: {Math.round(bottomRotation)}°
+            Rotate Wheel: {Math.round(bottomRotation)}°
           </label>
           <input
             type="range"
